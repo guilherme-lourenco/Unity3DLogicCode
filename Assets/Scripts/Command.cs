@@ -10,7 +10,8 @@ public class Command : MonoBehaviour
         Up = 0,
         Down = 1,
         Right = 2,
-        Left = 3
+        Left = 3,
+        Jump
     }
 
     [HideInInspector]

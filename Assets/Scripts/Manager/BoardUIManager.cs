@@ -15,6 +15,7 @@ public class BoardUIManager : MonoBehaviour
     public Button BtnMoveDown;
     public Button BtnMoveRight;
     public Button BtnMoveLeft;
+    public Button BtnJump;
     public Button BtnLoop;
     public Button BtnPlay;
 
@@ -50,9 +51,8 @@ public class BoardUIManager : MonoBehaviour
         BtnMoveDown.onClick.AddListener(() => btnAddMoveCommand(Command.MoveCommand.Down));
         BtnMoveRight.onClick.AddListener(() => btnAddMoveCommand(Command.MoveCommand.Right));
         BtnMoveLeft.onClick.AddListener(() => btnAddMoveCommand(Command.MoveCommand.Left));
-
+        BtnJump.onClick.AddListener(() => btnAddMoveCommand(Command.MoveCommand.Jump));
         BtnLoop.onClick.AddListener(() => btnAddLoopCommand());
-
         BtnPlay.onClick.AddListener(() => btnPlay());
         BtnPlayAgain.onClick.AddListener(() => btnRestartGame());
         BtnWin.onClick.AddListener(() => btnWin());
