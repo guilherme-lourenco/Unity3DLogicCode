@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +10,6 @@ public class Board : MonoBehaviour
     public Transform CellObj1;
     public Transform CellObj2;
     private int matrix = 10;
-
 
     private Dictionary<int, Transform> boardPositions;
 
@@ -61,6 +61,19 @@ public class Board : MonoBehaviour
         return (v3.x, v3.y, v3.z);
     }
 
+    public (float, float, float) GetXYZPosition(int cellPos, Action gameOver)
+    {
+        if (!boardPositions.ContainsKey(cellPos))
+        {
+            gameOver();
+            return (0,0,0);
+        }
+
+        Vector3 v3 = boardPositions[cellPos].localPosition;
+
+        return (v3.x, v3.y, v3.z);
+    }
+
     public Transform GetTransform()
     {
         return BoardObj.transform;
@@ -83,6 +96,7 @@ public class Board : MonoBehaviour
         if (direction == Command.MoveCommand.Up)
         {
             currentPosition += 1;
+            currentPosCamera = 0;
         }
 
         if (direction == Command.MoveCommand.Down)

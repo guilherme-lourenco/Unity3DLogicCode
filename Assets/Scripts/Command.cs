@@ -7,30 +7,30 @@ public class Command : MonoBehaviour
 {
     public enum MoveCommand
     {
-        Up,
-        Down,
-        Right,
-        Left
+        Up = 0,
+        Down = 1,
+        Right = 2,
+        Left = 3
     }
 
     [HideInInspector]
-    Dictionary<int, IEnumerator> CommandsToExecute;
+    Dictionary<Guid, IEnumerator> CommandsToExecute;
 
     private void Awake()
     {
-        CommandsToExecute = new Dictionary<int, IEnumerator>();
+        CommandsToExecute = new Dictionary<Guid, IEnumerator>();
     }
 
-    public void AddCommand(int order, IEnumerator command)
+    public void AddCommand(Guid guid, IEnumerator command)
     {
-        RemoveCommand(order);
-        CommandsToExecute.Add(order, command);
+        RemoveCommand(guid);
+        CommandsToExecute.Add(guid, command);
     }
 
-    public void RemoveCommand(int order)
+    public void RemoveCommand(Guid guid)
     {
-        if (CommandsToExecute.ContainsKey(order))
-            CommandsToExecute.Remove(order);
+        if (CommandsToExecute.ContainsKey(guid))
+            CommandsToExecute.Remove(guid);
     }
 
     public void ClearCommands()
@@ -40,21 +40,19 @@ public class Command : MonoBehaviour
 
     public IEnumerator ExecuteCommands()
     {
-        for (int i = 1; i <= CommandsToExecute.Count; i++)
+        foreach (KeyValuePair<Guid, IEnumerator> command in CommandsToExecute)
         {
-            yield return StartCoroutine(CommandsToExecute[i]);
-
+            yield return StartCoroutine(command.Value);
             if (BoardManager.Instance.GameOver)
                 yield break;
         }
     }
 
-    public IEnumerator ExecuteLoopCommands(Dictionary<int, IEnumerator> commands)
+    public IEnumerator ExecuteLoopCommands(Dictionary<Guid, IEnumerator> commands)
     {
-
-        for (int j = 1; j <= commands.Count; j++)
+        foreach (KeyValuePair<Guid, IEnumerator> command in commands)
         {
-            yield return StartCoroutine(commands[j]);
+            yield return StartCoroutine(command.Value);
 
             if (BoardManager.Instance.GameOver)
                 yield break;

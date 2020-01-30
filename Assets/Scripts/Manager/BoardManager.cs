@@ -20,8 +20,7 @@ public class BoardManager : MonoBehaviour
     [HideInInspector] public bool Win = false;
 
 
-    Dictionary<int, IEnumerator> loopCommands;
-    int orderLoopCommands = 0;
+    Dictionary<Guid, IEnumerator> loopCommands;
     bool looping = false;
     int iteration = 0;
 
@@ -79,52 +78,44 @@ public class BoardManager : MonoBehaviour
         return initialPinPos;
     }
 
-    public void AddCommand(int order, Command.MoveCommand command, int currentPosition, Action<int> callbackPos)
+    public void AddCommand(Command.MoveCommand command, Action<Guid> callbackPos)
     {
         if (Utils.Enum<Command.MoveCommand>.IsDefined(command))
         {
-            int posCamera = 0;
-
-            (currentPosition, posCamera) = Board.GetDirection(command, currentPosition, posCamera);
-            (float x, float y, float z) = Board.GetXYZPosition(currentPosition);
+            Guid guid = Guid.NewGuid();
 
             if (!looping)
             {
-                Commands.AddCommand(order, Pin.Move(new Vector3(x, Pin.GetHeight(), z), posCamera));
+                Commands.AddCommand(guid, Pin.Move(command));
             }
 
             if (looping)
             {
                 for (int i = 0; i < iteration; i++)
                 {
-                    if (i > 0)
-                    {
-                        (currentPosition, posCamera) = Board.GetDirection(command, currentPosition, posCamera);
-                        (x, y, z) = Board.GetXYZPosition(currentPosition);
-                    }
-
-                    loopCommands.Add(orderLoopCommands, Pin.Move(new Vector3(x, Pin.GetHeight(), z), posCamera));
-                    orderLoopCommands++;
+                    guid = Guid.NewGuid();
+                    loopCommands.Add(guid, Pin.Move(command));
                 }
-            }                
+            }
 
-            callbackPos(currentPosition);
+            callbackPos(guid);
             return;
         }
     }
 
-    public void AddLoopCommand(bool initLoop, int order, int iteration)
+    public void AddLoopCommand(bool initLoop, int iteration)
     {
         looping = initLoop;
         if (initLoop)
         {
-            loopCommands = new Dictionary<int, IEnumerator>();
-            orderLoopCommands = 1;
+            loopCommands = new Dictionary<Guid, IEnumerator>();
             this.iteration = iteration;
             return;
         }
 
-        Commands.AddCommand(order, Commands.ExecuteLoopCommands(loopCommands));
+        Guid guid = Guid.NewGuid();
+
+        Commands.AddCommand(guid, Commands.ExecuteLoopCommands(loopCommands));
     }
 
     public IEnumerator PlayGame(Action<bool> result)

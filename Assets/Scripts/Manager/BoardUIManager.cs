@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,21 +26,22 @@ public class BoardUIManager : MonoBehaviour
     public GameObject PnlGameOver;
     public GameObject PnlWin;
 
-    [Header("Commands")]
-    public Text TxtCommands;
+    [Header("Commands Selected")]
+    public CommandsSelected CommandsSelectedPrefab;
+    public Transform PnlLoopPrefab;
+    public Transform PnlCommandsSelected;
+    public List<Color> ColorsCommands;
 
-    int currentPosition = 0;
-    int numberOrder = 1;
-    bool looping = false;
+    [Header("Texts")]
+    public Text TxtMsg;
+    public Text TxtLoop;
+
+    private Transform CurrentPnlLoop;
+    bool looping = false;    
 
     private void Awake()
     {
         configureListener();
-    }
-
-    private void Start()
-    {
-        currentPosition = BoardManager.Instance.GetPinInitialPos();
     }
 
     void configureListener()
@@ -57,33 +60,26 @@ public class BoardUIManager : MonoBehaviour
 
     private void btnAddMoveCommand(Command.MoveCommand direction)
     {
-        BoardManager.Instance.AddCommand(numberOrder, direction, currentPosition, (currentPos) =>
+        BoardManager.Instance.AddCommand(direction, (guid) =>
         {
-            currentPosition = currentPos;
-
-            if (looping)
-                TxtCommands.text += $"\n\t{direction.ToString()}";
-            if (!looping)
-            {
-                TxtCommands.text += $"\n{direction.ToString()}";
-                numberOrder++;
-            }
+            InstantiateCommands(guid, direction);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(PnlCommandsSelected.GetComponent<RectTransform>());
         });
     }
     private void btnAddLoopCommand()
     {
         looping = !looping;
 
-        BoardManager.Instance.AddLoopCommand(looping, numberOrder, 3);
-
         if (looping)
-            TxtCommands.text += $"\nInitial Loop";
-
-        if (!looping)
         {
-            TxtCommands.text += $"\nEnd Loop";
-            numberOrder++;
+            CurrentPnlLoop = Instantiate(PnlLoopPrefab, PnlCommandsSelected);
+            TxtLoop.text = "END LOOP";
+            LayoutRebuilder.ForceRebuildLayoutImmediate(PnlCommandsSelected.GetComponent<RectTransform>());
+            return;
         }
+
+        TxtLoop.text = "LOOP";
+        BoardManager.Instance.AddLoopCommand(looping, 3);
     }
 
     private void btnPlay()
@@ -93,17 +89,24 @@ public class BoardUIManager : MonoBehaviour
 
     private IEnumerator play()
     {
-        MainCamera.SetActive(false);
-
-        yield return new WaitForSeconds(0.2f);
-
-        StartCoroutine(BoardManager.Instance.PlayGame((result) =>
+        if (!looping)
         {
-            if (!result)
-                gameOver();
-            else
-                win();
-        }));
+            MainCamera.SetActive(false);
+
+            yield return new WaitForSeconds(0.2f);
+
+            StartCoroutine(BoardManager.Instance.PlayGame((result) =>
+            {
+                if (!result)
+                    gameOver();
+                else
+                    win();
+            }));
+
+            yield break;
+        }
+
+        StartCoroutine(errorMsg("CLOSE THE LOOP!"));
     }
 
     private void gameOver()
@@ -113,10 +116,8 @@ public class BoardUIManager : MonoBehaviour
 
     private void btnRestartGame()
     {
+        PnlCommandsSelected.GetComponentsInChildren<CommandsSelected>().ToList().ForEach(x => Destroy(x.gameObject));
         MainCamera.SetActive(true);
-        TxtCommands.text = string.Empty;
-        currentPosition = BoardManager.Instance.GetPinInitialPos();
-        numberOrder = 1;
         BoardManager.Instance.ResetBoard();
         PnlGameOver.SetActive(false);
     }
@@ -130,5 +131,19 @@ public class BoardUIManager : MonoBehaviour
     {
         btnRestartGame();
         PnlWin.SetActive(false);
+    }
+
+    private void InstantiateCommands(Guid guid, Command.MoveCommand direction)
+    {
+        CommandsSelected command = Instantiate(CommandsSelectedPrefab, (looping) ? CurrentPnlLoop : PnlCommandsSelected);
+        command.SetInfo(direction.ToString(), ColorsCommands[(int) direction], guid);
+    }
+
+    IEnumerator errorMsg(string error)
+    {
+        TxtMsg.text = error;
+        TxtMsg.gameObject.SetActive(true);
+        yield return new WaitForSeconds(3);
+        TxtMsg.gameObject.SetActive(false);
     }
 }

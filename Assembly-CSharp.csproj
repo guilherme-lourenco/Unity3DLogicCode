@@ -65,6 +65,7 @@
     <Compile Include="Assets\Scripts\Block.cs" />
     <Compile Include="Assets\Scripts\Board.cs" />
     <Compile Include="Assets\Scripts\Command.cs" />
+    <Compile Include="Assets\Scripts\CommandsSelected.cs" />
     <Compile Include="Assets\Scripts\Manager\BoardManager.cs" />
     <Compile Include="Assets\Scripts\Manager\BoardUIManager.cs" />
     <Compile Include="Assets\Scripts\Objective.cs" />
